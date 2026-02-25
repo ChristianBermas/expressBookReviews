@@ -27,14 +27,63 @@ const authenticatedUser = (username, password) => {
 
 //only registered users can login
 regd_users.post("/login", (req, res) => {
-  //Write your code here
-  return res.status(300).json({ message: "Yet to be implemented" });
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).send({ message: "username and password are not provided" });
+  }
+
+  if (authenticatedUser(username, password)) {
+
+    let accessToken = jwt.sign({ data: password }, 'access', { expiresIn: 60 * 60 });
+
+    req.session.authorization = { accessToken, username };
+
+    return res.status(200).send({ message: "User successfully logged in" });
+  } else {
+    return res.status(401).send({ message: "Invalid login. Check username and password" });
+  }
 });
 
 // Add a book review
 regd_users.put("/auth/review/:isbn", (req, res) => {
-  //Write your code here
-  return res.status(300).json({ message: "Yet to be implemented" });
+  const isbn = req.params.isbn;
+  const book = books[isbn];
+
+  if (!book) {
+    return res.status(404).send({ message: "Book not found" });
+  }
+
+  const username = req.session.authorization.username;
+  const usersReview = book.reviews[username];
+  const newReview = req.body.review;
+
+  book.reviews[username] = newReview;
+
+  if (usersReview) {
+    return res.status(200).send({ message: "Review updated successfully" });
+  } else {
+    return res.status(200).send({ message: "Review added successfully" });
+  }
+
+});
+
+regd_users.delete("/auth/review/:isbn", (req, res) => {
+  const isbn = req.params.isbn;
+  const book = books[isbn];
+  const username = req.session.authorization.username;
+
+  if (!book) {
+    return res.status(404).send({ message: "Book not found" });
+  }
+
+  if (book.reviews[username]) {
+    delete book.reviews[username];
+    return res.status(200).send({ message: "Review deleted successfully" });
+  } else {
+    return res.status(404).send({ message: "Cannot delete review." });
+  }
+
 });
 
 module.exports.authenticated = regd_users;
