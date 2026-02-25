@@ -16,13 +16,13 @@ const isValid = (username) => {
 }
 
 const authenticatedUser = (username, password) => {
-  const user = users.find(user => user.username === username && user.password === password);
+  const user = users.filter(user => user.username === username && user.password === password);
 
   if (user && user.length > 0) {
     return true;
+  } else {
+    return false;
   }
-
-  return false;
 }
 
 //only registered users can login
@@ -40,6 +40,7 @@ regd_users.post("/login", (req, res) => {
     req.session.authorization = { accessToken, username };
 
     return res.status(200).send({ message: "User successfully logged in" });
+
   } else {
     return res.status(401).send({ message: "Invalid login. Check username and password" });
   }
