@@ -93,13 +93,19 @@ public_users.get('/title/:title', function (req, res) {
 //  Get book review
 public_users.get('/review/:isbn', function (req, res) {
   const isbn = req.params.isbn;
-  const book = books[isbn];
+  const bookReview = new Promise((resolve, reject) => {
+    const book = books[isbn];
 
-  if (!book) {
-    return res.status(404).send({ message: "Book not found" });
-  }
+    if (book) {
+      resolve(JSON.stringify(book.reviews, null, 4));
+    } else {
+      reject({ message: "Book not found" });
+    }
+  });
 
-  return res.status(200).send(JSON.stringify(book.reviews, null, 4));
+  return bookReview
+    .then(result => res.status(200).send(result))
+    .catch(err => res.status(404).send(err));
 });
 
 module.exports.general = public_users;
